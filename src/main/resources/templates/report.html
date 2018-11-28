@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+    <meta charset="UTF-8">
+    <title>老韦的天气预报</title>
+    <script th:src="@{/js/jquery.min.js}"></script>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <div class="row" >
+            <h3 th:text="${title}" ></h3>
+            <select class="selected" id="province">
+                <option th:selected="${cityId.startsWith(p.id)}" th:each="p:${provincess.provinces}" th:value="${p.id}" th:text="${p.name}" ></option>
+            </select>
+            <select class="selected" onchange="onCityChange()" id="city">
+                <option th:selected="${cityId.startsWith(c.cityId)}"  th:each="c:${citys.getCityList()}" th:value="${c.cityId}" th:text="${c.cityName}" ></option>
+            </select>
+            <select class="selected" onchange="onPrefectureChange()" id="prefecture">
+                <option th:selected="${cityId.startsWith(p.cityId)}"  th:each="p:${prefectures.getPrefectures()}" th:value="${p.cityCode}" th:text="${p.cityName}" ></option>
+            </select>
+        </div>
+        <div class="row">
+            <h1 th:text="${report.city}"></h1>
+        </div>
+        <div class="row">
+            <p>
+            空气质量指数： <span th:text="${report.aqi}"></span>
+            </p>
+
+        </div>
+        <div class="row">
+            <p>
+                当前温度： <span th:text="${report.wendu}"></span>
+            </p>
+
+        </div>
+        <div class="row">
+            <p>
+                温习提示： <span th:text="${report.ganmao}"></span>
+            </p>
+
+        </div>
+        <div class="row">
+           <div class="card" th:each="f:${report.forecast}">
+               <div class="card-body">
+                   <p class="card-text" th:text="${f.date}"></p>
+                   <p class="card-text" th:text="${f.type}"></p>
+                   <p class="card-text" th:text="${f.high}"></p>
+                   <p class="card-text" th:text="${f.low}"></p>
+                   <p class="card-text" th:text="${f.fengxiang}"></p>
+               </div>
+           </div>
+
+        </div>
+    </div>
+    <script th:src="@{/js/jquery.min.js}"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script th:src="@{/js/jquery.min.js}"></script>
+</body>
+<script>
+    $(function() {
+        $("#province").change(function() {
+            $.ajax({
+                url: "/report/citys/"+$("#province").val(),
+                type: "get",
+                contentType: "application/json;charset=utf-8",
+                dataType: 'json',
+                async: true,
+                success: function(result){
+                    var citys = "<select id=\"city\">\n";
+                    for (var i=0;i<result.cityList.length;i++){
+                        citys +="<option  value=\""+result.cityList[i].cityId+"\"  >"+result.cityList[i].cityName+"</option>";
+                    }
+                    citys +="</select>";
+                    if($("#city").length > 0) {
+                        //元素存在时执行的代码
+                        $("#city").replaceWith(citys);
+                    }else {
+                        $("#province").after(citys);
+                    }
+
+
+
+                    var prefecture = "<select id=\"prefecture\">\n";
+                    for (var j=0;j<result.cityList[0].prefectures.length;j++){
+                        prefecture +="<option  value=\""+result.cityList[0].prefectures[j].cityCode+"\"  >"+result.cityList[0].prefectures[j].cityName+"</option>";
+                    }
+                    prefecture +="</select>";
+
+                    if($("#prefecture").length > 0) {
+                        //元素存在时执行的代码
+                        $("#prefecture").replaceWith(prefecture);
+                    }else {
+                        $("#city").after(prefecture);
+                    }
+
+                    $("#city").attr('onchange','onCityChange()');
+                    $("#prefecture").attr('onchange','onPrefectureChange()');
+                }});
+        })
+    });
+
+    function onCityChange() {
+        $.ajax({
+            url: "/report/citys/"+$("#province").val()+"/"+$("#city").val(),
+            type: "get",
+            contentType: "application/json;charset=utf-8",
+            dataType: 'json',
+            async: true,
+            success: function(result){
+                var prefecture = "<select id=\"prefecture\">\n";
+                for (var j=0;j<result.prefectures.length;j++){
+                    prefecture +="<option  value=\""+result.prefectures[j].cityCode+"\"  >"+result.prefectures[j].cityName+"</option>";
+                }
+                prefecture +="</select>";
+
+                $("#prefecture").replaceWith(prefecture);
+
+                $("#prefecture").attr('onchange','onPrefectureChange()');
+            }});
+
+    }
+
+    function onPrefectureChange() {
+        location ="/report/cityId/"+$("#prefecture").val();
+    }
+</script>
+</html>

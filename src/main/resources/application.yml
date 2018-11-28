@@ -1,0 +1,12 @@
+server:
+  tomcat:
+    uri-encoding: UTF-8
+
+spring:
+  thymeleaf:
+    mode: LEGACYHTML5
+    prefix: classpath:/templates/
+    encoding: utf-8
+    suffix: .html
+    #    cache: true
+    cache: false
