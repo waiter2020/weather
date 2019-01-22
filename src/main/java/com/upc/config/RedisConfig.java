@@ -1,4 +1,4 @@
-package com.upc.controller;
+package com.upc.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
